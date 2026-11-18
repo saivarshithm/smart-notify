@@ -9,6 +9,8 @@ pub fn setup_tray<R: Runtime>(
     app: &AppHandle<R>,
     smart_engine: Arc<SmartEngine>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let open_dashboard_item =
+        MenuItemBuilder::with_id("open_dashboard", "Open Dashboard & Control Center").build(app)?;
     let toggle_history_item =
         MenuItemBuilder::with_id("toggle_history", "Toggle History Drawer (Alt+Shift+N)").build(app)?;
     let send_test_item =
@@ -26,6 +28,7 @@ pub fn setup_tray<R: Runtime>(
 
     let menu = MenuBuilder::new(app)
         .items(&[
+            &open_dashboard_item,
             &toggle_history_item,
             &send_test_item,
             &toggle_focus_item,
@@ -47,6 +50,14 @@ pub fn setup_tray<R: Runtime>(
         .on_menu_event(move |app_handle, event| {
             let id = event.id().as_ref();
             match id {
+                "open_dashboard" => {
+                    use tauri::Manager;
+                    if let Some(dashboard) = app_handle.get_webview_window("dashboard") {
+                        let _ = dashboard.show();
+                        let _ = dashboard.unminimize();
+                        let _ = dashboard.set_focus();
+                    }
+                }
                 "toggle_history" => {
                     let _ = app_handle.emit("toggle-history", ());
                 }
@@ -108,8 +119,21 @@ pub fn setup_tray<R: Runtime>(
                 ..
             } = event
             {
+                use tauri::Manager;
                 let app = tray.app_handle();
-                let _ = app.emit("toggle-history", ());
+                if let Some(dashboard) = app.get_webview_window("dashboard") {
+                    if let Ok(is_visible) = dashboard.is_visible() {
+                        if is_visible {
+                            let _ = dashboard.hide();
+                        } else {
+                            let _ = dashboard.show();
+                            let _ = dashboard.unminimize();
+                            let _ = dashboard.set_focus();
+                        }
+                    } else {
+                        let _ = dashboard.show();
+                    }
+                }
             }
         })
         .build(app)?;

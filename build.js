@@ -15,7 +15,7 @@ if (!fs.existsSync(DIST_DIR)) {
 // Check if stripTypeScriptTypes is natively supported by this Node version
 const hasNativeStrip = typeof moduleApi.stripTypeScriptTypes === 'function';
 
-const tsFiles = ['types.ts', 'physics.ts', 'main.ts'];
+const tsFiles = ['types.ts', 'physics.ts', 'main.ts', 'dashboard.ts'];
 
 for (const file of tsFiles) {
   const srcTsPath = path.join(SRC_DIR, file);
@@ -30,20 +30,21 @@ for (const file of tsFiles) {
     fs.writeFileSync(srcJsPath, strippedJs, 'utf8');
     console.log(`[build] Transpiled ${file} -> dist/${outFileName}`);
   } else if (fs.existsSync(srcJsPath)) {
-    // Fallback: Copy pre-generated JS file
     fs.copyFileSync(srcJsPath, distPath);
     console.log(`[build] Copied ${outFileName} -> dist/${outFileName}`);
   } else if (fs.existsSync(srcTsPath)) {
-    // Basic regex-free fallback for plain JS
     fs.copyFileSync(srcTsPath, distPath);
   }
 }
 
-// 2. Copy style.css to dist/
-const cssPath = path.join(SRC_DIR, 'style.css');
-if (fs.existsSync(cssPath)) {
-  fs.copyFileSync(cssPath, path.join(DIST_DIR, 'style.css'));
-  console.log('[build] Copied style.css -> dist/style.css');
+// 2. Copy CSS files to dist/
+const cssFiles = ['style.css', 'dashboard.css'];
+for (const css of cssFiles) {
+  const cssPath = path.join(SRC_DIR, css);
+  if (fs.existsSync(cssPath)) {
+    fs.copyFileSync(cssPath, path.join(DIST_DIR, css));
+    console.log(`[build] Copied ${css} -> dist/${css}`);
+  }
 }
 
 // 3. Process index.html for dist/
@@ -56,6 +57,24 @@ if (fs.existsSync(indexHtmlPath)) {
 
   fs.writeFileSync(path.join(DIST_DIR, 'index.html'), html, 'utf8');
   console.log('[build] Generated dist/index.html');
+}
+
+// 4. Process dashboard.html for dist/
+const dashboardHtmlPath = path.join(ROOT_DIR, 'dashboard.html');
+if (fs.existsSync(dashboardHtmlPath)) {
+  let html = fs.readFileSync(dashboardHtmlPath, 'utf8');
+  html = html.replace('./src/dashboard.js', './dashboard.js');
+  html = html.replace('./src/dashboard.ts', './dashboard.js');
+  html = html.replace('./src/dashboard.css', './dashboard.css');
+
+  fs.writeFileSync(path.join(DIST_DIR, 'dashboard.html'), html, 'utf8');
+  console.log('[build] Generated dist/dashboard.html');
+}
+
+// 5. Copy app logo to dist for dashboard view
+const logoPath = path.join(ROOT_DIR, 'smart-notify-logo.png');
+if (fs.existsSync(logoPath)) {
+  fs.copyFileSync(logoPath, path.join(DIST_DIR, 'smart-notify-logo.png'));
 }
 
 console.log('[build] Build completed successfully.');

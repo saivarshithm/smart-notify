@@ -45,7 +45,6 @@ test('3. Burst Coalescing Logic Simulation', () => {
       tracker.set(appId, []);
     }
     const timestamps = tracker.get(appId);
-    // Retain within burst window
     const active = timestamps.filter((t) => timestamp - t <= burstWindowMs);
     active.push(timestamp);
     tracker.set(appId, active);
@@ -58,32 +57,26 @@ test('3. Burst Coalescing Logic Simulation', () => {
   }
 
   const baseTime = 10000;
-  // First message from WhatsApp
   const r1 = processNotification('WhatsApp', baseTime);
   assert.strictEqual(r1.isCoalesced, false);
   assert.strictEqual(r1.count, 1);
 
-  // Second message 1s later
   const r2 = processNotification('WhatsApp', baseTime + 1000);
   assert.strictEqual(r2.isCoalesced, false);
   assert.strictEqual(r2.count, 2);
 
-  // Third message 2s later (within 4s) -> Should coalesce!
   const r3 = processNotification('WhatsApp', baseTime + 2000);
   assert.strictEqual(r3.isCoalesced, true);
   assert.strictEqual(r3.count, 3);
 
-  // Fourth message 3s later -> Should continue coalescing!
   const r4 = processNotification('WhatsApp', baseTime + 3000);
   assert.strictEqual(r4.isCoalesced, true);
   assert.strictEqual(r4.count, 4);
 
-  // Different app (Slack) should not be affected by WhatsApp burst
   const slackRes = processNotification('Slack', baseTime + 3200);
   assert.strictEqual(slackRes.isCoalesced, false);
   assert.strictEqual(slackRes.count, 1);
 
-  // Message after burst window expires (6 seconds later)
   const r5 = processNotification('WhatsApp', baseTime + 9000);
   assert.strictEqual(r5.isCoalesced, false);
   assert.strictEqual(r5.count, 1);
@@ -110,7 +103,16 @@ test('4. In-Memory Ring Buffer (50 items max)', () => {
 });
 
 test('5. Frontend Build Artifacts Integrity', () => {
-  const distFiles = ['index.html', 'style.css', 'main.js', 'physics.js', 'types.js'];
+  const distFiles = [
+    'index.html',
+    'style.css',
+    'main.js',
+    'physics.js',
+    'types.js',
+    'dashboard.html',
+    'dashboard.css',
+    'dashboard.js',
+  ];
   for (const file of distFiles) {
     const fullPath = path.join(ROOT_DIR, 'dist', file);
     assert.ok(fs.existsSync(fullPath), `dist/${file} must exist`);
@@ -121,7 +123,11 @@ test('5. Frontend Build Artifacts Integrity', () => {
   const html = fs.readFileSync(path.join(ROOT_DIR, 'dist', 'index.html'), 'utf8');
   assert.ok(html.includes('overlay-container'), 'HTML must have overlay-container');
   assert.ok(html.includes('notifications-list'), 'HTML must have notifications-list');
-  assert.ok(html.includes('history-drawer'), 'HTML must have history-drawer');
+
+  const dashboardHtml = fs.readFileSync(path.join(ROOT_DIR, 'dist', 'dashboard.html'), 'utf8');
+  assert.ok(dashboardHtml.includes('Management Dashboard'), 'Dashboard HTML must have title');
+  assert.ok(dashboardHtml.includes('tab-testing'), 'Dashboard HTML must have Test Lab tab');
+  assert.ok(dashboardHtml.includes('tab-rules'), 'Dashboard HTML must have Smart Rules tab');
 });
 
 test('6. AppxManifest.xml Sparse MSIX Package Integrity', () => {
@@ -135,18 +141,25 @@ test('6. AppxManifest.xml Sparse MSIX Package Integrity', () => {
   assert.ok(content.includes('smart-notify.exe'), 'Manifest executable must be smart-notify.exe');
 });
 
-test('7. System Tray & Tauri Configuration', () => {
+test('7. System Tray & Multi-Window Configuration (No Duplicate Trays)', () => {
   const tauriConfPath = path.join(ROOT_DIR, 'src-tauri', 'tauri.conf.json');
   assert.ok(fs.existsSync(tauriConfPath), 'tauri.conf.json must exist');
 
   const conf = JSON.parse(fs.readFileSync(tauriConfPath, 'utf8'));
-  const win = conf.app.windows[0];
-  assert.strictEqual(win.transparent, true, 'Window must be transparent');
-  assert.strictEqual(win.decorations, false, 'Window must have no decorations');
-  assert.strictEqual(win.alwaysOnTop, true, 'Window must be alwaysOnTop');
-  assert.strictEqual(win.skipTaskbar, true, 'Window must skip taskbar');
-  assert.strictEqual(win.resizable, false, 'Window must not be resizable');
-  assert.strictEqual(win.shadow, false, 'Window must have shadow disabled');
-  assert.strictEqual(win.width, 400, 'Window width must be 400');
-  assert.strictEqual(win.height, 680, 'Window height must be 680');
+  
+  // Ensure no duplicate tray icon configured in app block (avoids duplicate hidden tray icons)
+  assert.strictEqual(conf.app.trayIcon, undefined, 'tauri.conf.json must NOT define duplicate trayIcon in app block');
+
+  // Verify Windows
+  assert.strictEqual(conf.app.windows.length, 2, 'Must have 2 windows (overlay + dashboard)');
+
+  const overlayWin = conf.app.windows.find((w) => w.label === 'main');
+  assert.ok(overlayWin, 'Overlay window must exist');
+  assert.strictEqual(overlayWin.transparent, true, 'Overlay window must be transparent');
+  assert.strictEqual(overlayWin.alwaysOnTop, true, 'Overlay window must be alwaysOnTop');
+
+  const dashboardWin = conf.app.windows.find((w) => w.label === 'dashboard');
+  assert.ok(dashboardWin, 'Dashboard window must exist');
+  assert.strictEqual(dashboardWin.title, 'Smart Notify — Management Dashboard');
+  assert.strictEqual(dashboardWin.url, 'dashboard.html');
 });

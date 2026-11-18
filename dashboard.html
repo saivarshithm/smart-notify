@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Notify — Management Dashboard</title>
+    <link rel="stylesheet" href="./src/dashboard.css" />
+  </head>
+  <body>
+    <div class="dashboard-shell">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <div class="brand-header">
+          <img src="./smart-notify-logo.png" alt="Smart Notify Logo" class="brand-logo" />
+          <div class="brand-info">
+            <span class="brand-title">Smart Notify</span>
+            <span class="brand-version">v1.0.3 • Control Center</span>
+          </div>
+        </div>
+
+        <nav class="nav-menu">
+          <button class="nav-item active" data-tab="tab-overview">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Overview</span>
+          </button>
+
+          <button class="nav-item" data-tab="tab-testing">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span>Test Lab</span>
+          </button>
+
+          <button class="nav-item" data-tab="tab-rules">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>Smart Rules</span>
+          </button>
+
+          <button class="nav-item" data-tab="tab-history">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="12 8 12 12 14 14"></polyline>
+              <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+            </svg>
+            <span>Alert History</span>
+          </button>
+
+          <button class="nav-item" data-tab="tab-updates">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+            </svg>
+            <span>Updates</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="listener-status-indicator">
+            <span class="status-dot pulsing"></span>
+            <span id="sidebar-status-text">WinRT Active</span>
+          </div>
+          <button id="minimize-dashboard-btn" class="sidebar-action-btn">Minimize to Tray</button>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="content-body">
+        <!-- 1. Overview Tab -->
+        <section id="tab-overview" class="tab-pane active">
+          <div class="pane-header">
+            <h1 class="pane-title">System Overview</h1>
+            <p class="pane-subtitle">Live health and configuration status of your Smart Notify notification layer.</p>
+          </div>
+
+          <div class="card-grid">
+            <div class="status-card">
+              <div class="status-card-header">
+                <span class="status-card-label">Listener Engine</span>
+                <span class="badge badge-success">RUNNING</span>
+              </div>
+              <div class="status-card-val" id="overview-engine-text">Event-Driven WinRT</div>
+              <p class="status-card-desc">Zero-polling background MTA thread receiving Windows toast events.</p>
+            </div>
+
+            <div class="status-card">
+              <div class="status-card-header">
+                <span class="status-card-label">Overlay Display</span>
+                <span class="badge badge-info">ANCHORED</span>
+              </div>
+              <div class="status-card-val">Top-Right Monitor</div>
+              <p class="status-card-desc">DPI scaled, 100% click-through outside interactive notification cards.</p>
+            </div>
+
+            <div class="status-card">
+              <div class="status-card-header">
+                <span class="status-card-label">Focus Pause</span>
+                <span id="overview-focus-badge" class="badge badge-neutral">INACTIVE</span>
+              </div>
+              <div class="status-card-val" id="overview-focus-text">Normal Delivery</div>
+              <p class="status-card-desc">Banners pop up as normal. Urgent alerts always bypass focus pause.</p>
+            </div>
+          </div>
+
+          <div class="action-banner">
+            <div class="action-banner-text">
+              <h3>Windows 11 Native Banners Tip</h3>
+              <p>To avoid duplicate alerts, turn off Windows' default toasts so only Smart Notify displays banners.</p>
+            </div>
+            <button id="overview-open-settings-btn" class="primary-btn">Open Windows Settings</button>
+          </div>
+        </section>
+
+        <!-- 2. Test Lab Tab -->
+        <section id="tab-testing" class="tab-pane">
+          <div class="pane-header">
+            <h1 class="pane-title">Notification Test Lab</h1>
+            <p class="pane-subtitle">Simulate notification payloads to test animations, burst coalescing, and deck stacking.</p>
+          </div>
+
+          <div class="test-controls-grid">
+            <div class="test-card">
+              <div class="test-card-icon">💬</div>
+              <h3>Standard Alert</h3>
+              <p>Simulates a standard Slack or Spotify alert with 5.5s auto-dismiss and pause-on-hover.</p>
+              <button id="test-btn-normal" class="test-action-btn">Trigger Standard Alert</button>
+            </div>
+
+            <div class="test-card urgent-highlight">
+              <div class="test-card-icon">🚨</div>
+              <h3>Urgent OTP / 2FA</h3>
+              <p>Matches urgent keywords (`OTP`, `2fa`, `verification`). Activates 9s timer and accent ring.</p>
+              <button id="test-btn-urgent" class="test-action-btn urgent-btn">Trigger Urgent Alert</button>
+            </div>
+
+            <div class="test-card">
+              <div class="test-card-icon">⚡</div>
+              <h3>Burst Coalescing (3x)</h3>
+              <p>Simulates 3 rapid WhatsApp messages within 4 seconds. Coalesces into a single card.</p>
+              <button id="test-btn-burst" class="test-action-btn">Trigger 3x Burst</button>
+            </div>
+
+            <div class="test-card">
+              <div class="test-card-icon">📚</div>
+              <h3>Stacked App Deck</h3>
+              <p>Pushes multiple alerts from the same app to test the physical card deck expansion and `+N more` badge.</p>
+              <button id="test-btn-stack" class="test-action-btn">Trigger Stack Item</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Smart Rules Tab -->
+        <section id="tab-rules" class="tab-pane">
+          <div class="pane-header">
+            <h1 class="pane-title">Smart Rules &amp; Filtering</h1>
+            <p class="pane-subtitle">Configure auto-muting, urgent keywords, and banner durations stored in smart-rules.json.</p>
+          </div>
+
+          <div class="rules-form">
+            <!-- Muted Apps -->
+            <div class="form-group">
+              <label class="form-label">Muted Applications (Silently archived without popping a banner)</label>
+              <div id="muted-apps-container" class="tag-cloud"></div>
+              <div class="tag-input-row">
+                <input id="new-muted-app-input" type="text" placeholder="Add app name or ID (e.g. Spotify, GameBar)..." class="text-input" />
+                <button id="add-muted-app-btn" class="secondary-btn">Add App</button>
+              </div>
+            </div>
+
+            <!-- Urgent Keywords -->
+            <div class="form-group">
+              <label class="form-label">Urgent Keywords (Extends duration to 9s + glowing accent ring)</label>
+              <div id="urgent-keywords-container" class="tag-cloud"></div>
+              <div class="tag-input-row">
+                <input id="new-keyword-input" type="text" placeholder="Add urgent keyword (e.g. payment, critical)..." class="text-input" />
+                <button id="add-keyword-btn" class="secondary-btn">Add Keyword</button>
+              </div>
+            </div>
+
+            <!-- Sliders -->
+            <div class="slider-row">
+              <div class="slider-group">
+                <label class="form-label">Normal Banner Duration: <span id="val-normal-dur">5.5</span>s</label>
+                <input id="slider-normal-dur" type="range" min="3000" max="15000" step="500" value="5500" class="slider" />
+              </div>
+              <div class="slider-group">
+                <label class="form-label">Urgent Banner Duration: <span id="val-urgent-dur">9.0</span>s</label>
+                <input id="slider-urgent-dur" type="range" min="5000" max="20000" step="500" value="9000" class="slider" />
+              </div>
+            </div>
+
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input id="cb-suppress-fullscreen" type="checkbox" checked />
+                <span>Auto-hold non-urgent notifications during Fullscreen Games and Presentations</span>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button id="save-rules-btn" class="primary-btn">Save &amp; Apply Rules</button>
+              <button id="open-rules-file-btn" class="secondary-btn">Open smart-rules.json in Notepad</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. Alert History Tab -->
+        <section id="tab-history" class="tab-pane">
+          <div class="pane-header flex-between">
+            <div>
+              <h1 class="pane-title">Notification History</h1>
+              <p class="pane-subtitle">Last 50 alerts kept in memory.</p>
+            </div>
+            <button id="dashboard-clear-history-btn" class="secondary-btn">Clear All History</button>
+          </div>
+
+          <div class="history-search-row">
+            <input id="dashboard-history-search" type="text" placeholder="Search by app, sender, or message..." class="text-input" />
+          </div>
+
+          <div id="dashboard-history-list" class="history-table"></div>
+        </section>
+
+        <!-- 5. Updates Tab -->
+        <section id="tab-updates" class="tab-pane">
+          <div class="pane-header">
+            <h1 class="pane-title">Software Updates &amp; Diagnostics</h1>
+            <p class="pane-subtitle">Keep Smart Notify up to date with official releases from GitHub.</p>
+          </div>
+
+          <div class="update-card">
+            <div class="update-icon-circle">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+              </svg>
+            </div>
+            <div class="update-info">
+              <h3>Installed Version: <span id="current-ver-label">v1.0.3</span></h3>
+              <p id="update-status-desc">Click below to check for the latest version on GitHub Releases.</p>
+            </div>
+            <button id="dashboard-check-updates-btn" class="primary-btn">Check for Updates</button>
+          </div>
+
+          <div class="links-card">
+            <h3>Resources &amp; Support</h3>
+            <ul class="resource-links">
+              <li><a href="#" id="link-github-repo">GitHub Repository &amp; Source Code &rarr;</a></li>
+              <li><a href="#" id="link-github-releases">View All GitHub Releases &rarr;</a></li>
+              <li><a href="#" id="link-privacy-settings">Windows 11 Privacy &amp; Notification Settings &rarr;</a></li>
+            </ul>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./src/dashboard.js"></script>
+  </body>
+</html>

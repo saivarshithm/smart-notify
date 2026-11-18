@@ -13,8 +13,9 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Smart Notify",
+        "title": "Smart Notify Overlay",
         "label": "main",
+        "url": "index.html",
         "width": 400,
         "height": 680,
         "resizable": false,
@@ -25,13 +26,24 @@
         "shadow": false,
         "focus": false,
         "visible": true
+      },
+      {
+        "title": "Smart Notify — Management Dashboard",
+        "label": "dashboard",
+        "url": "dashboard.html",
+        "width": 940,
+        "height": 660,
+        "minWidth": 800,
+        "minHeight": 550,
+        "resizable": true,
+        "decorations": true,
+        "transparent": false,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "center": true,
+        "visible": false
       }
     ],
-    "trayIcon": {
-      "id": "main-tray",
-      "iconPath": "icons/icon.ico",
-      "tooltip": "Smart Notify"
-    },
     "security": {
       "csp": null
     }

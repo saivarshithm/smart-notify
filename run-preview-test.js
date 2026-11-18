@@ -35,7 +35,15 @@ server.listen(PORT, async () => {
   console.log(`[Preview Server] Running on http://localhost:${PORT}`);
 
   try {
-    const endpoints = ['/preview.html', '/dist/style.css', '/dist/main.js', '/dist/physics.js'];
+    const endpoints = [
+      '/preview.html',
+      '/dist/style.css',
+      '/dist/main.js',
+      '/dist/physics.js',
+      '/dist/dashboard.html',
+      '/dist/dashboard.css',
+      '/dist/dashboard.js',
+    ];
     let allOk = true;
 
     for (const ep of endpoints) {

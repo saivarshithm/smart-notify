@@ -80,6 +80,30 @@ fn open_rules_file(state: tauri::State<AppState>) {
 }
 
 #[command]
+fn open_dashboard(app: AppHandle) -> Result<(), String> {
+    if let Some(dashboard) = app.get_webview_window("dashboard") {
+        let _ = dashboard.show();
+        let _ = dashboard.unminimize();
+        let _ = dashboard.set_focus();
+    }
+    Ok(())
+}
+
+#[command]
+fn get_smart_rules(state: tauri::State<AppState>) -> models::SmartRules {
+    state.smart_engine.rules_manager.get_rules()
+}
+
+#[command]
+fn save_smart_rules(state: tauri::State<AppState>, rules: models::SmartRules) -> Result<(), String> {
+    let path = state.smart_engine.rules_manager.get_rules_path();
+    let content = serde_json::to_string_pretty(&rules).map_err(|e| e.to_string())?;
+    std::fs::write(&path, content).map_err(|e| e.to_string())?;
+    state.smart_engine.rules_manager.reload();
+    Ok(())
+}
+
+#[command]
 fn open_url(url: String) {
     #[cfg(windows)]
     {
@@ -197,6 +221,9 @@ pub fn run() {
             toggle_smart_focus_mode,
             open_notification_settings,
             open_rules_file,
+            open_dashboard,
+            get_smart_rules,
+            save_smart_rules,
             open_url,
             send_test_notification,
             recalculate_window_position,
