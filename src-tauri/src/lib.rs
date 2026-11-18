@@ -139,7 +139,7 @@ fn anchor_overlay_window(window: &WebviewWindow) {
         let margin_top_logical = 16.0;
 
         let width_phys = (width_logical * scale_factor) as i32;
-        let height_phys = (height_logical * scale_factor) as i32;
+        let _height_phys = (height_logical * scale_factor) as i32;
         let x_phys = (screen_size.width as i32) - width_phys - ((margin_right_logical * scale_factor) as i32);
         let y_phys = (margin_top_logical * scale_factor) as i32;
 

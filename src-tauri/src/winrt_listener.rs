@@ -2,18 +2,19 @@ use crate::models::ListenerStatusPayload;
 use crate::smart_engine::{ProcessResult, SmartEngine};
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use base64::Engine;
+use chrono::Utc;
 use std::sync::Arc;
 use std::thread;
 use tauri::{AppHandle, Emitter};
 
 #[cfg(windows)]
 use windows::{
-    core::HSTRING,
     Foundation::{Size, TypedEventHandler},
     Storage::Streams::DataReader,
-    UI::Notifications::KnownNotificationBindings,
+    UI::Notifications::{
+        KnownNotificationBindings, UserNotificationChangedEventArgs, UserNotificationChangedKind,
+    },
     UI::Notifications::Management::{
-        NotificationNotificationChangedKind, UserNotificationChangedEventArgs,
         UserNotificationListener, UserNotificationListenerAccessStatus,
     },
     Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED},
@@ -122,7 +123,7 @@ pub fn start_winrt_listener(app_handle: AppHandle, smart_engine: Arc<SmartEngine
                       args: &Option<UserNotificationChangedEventArgs>| {
                     if let Some(args) = args {
                         if let Ok(kind) = args.ChangeKind() {
-                            if kind == NotificationNotificationChangedKind::Added {
+                            if kind == UserNotificationChangedKind::Added {
                                 if let Ok(notif_id) = args.UserNotificationId() {
                                     if let Ok(raw_notif) = listener_for_event.GetNotification(notif_id) {
                                         process_winrt_notification(

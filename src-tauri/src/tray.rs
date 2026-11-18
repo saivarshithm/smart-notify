@@ -3,7 +3,7 @@ use crate::smart_engine::SmartEngine;
 use std::sync::Arc;
 use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Emitter, Manager, Runtime};
+use tauri::{AppHandle, Emitter, Runtime};
 
 pub fn setup_tray<R: Runtime>(
     app: &AppHandle<R>,

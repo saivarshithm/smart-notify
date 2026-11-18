@@ -9,8 +9,8 @@ use std::time::{Duration, Instant};
 
 #[cfg(windows)]
 use windows::Win32::UI::Shell::{
-    SHQueryUserNotificationState, QUERY_USER_NOTIFICATION_STATE, QUNS_BUSY,
-    QUNS_PRESENTATION_MODE, QUNS_RUNNING_D3D_FULL_SCREEN,
+    SHQueryUserNotificationState, QUNS_BUSY, QUNS_PRESENTATION_MODE,
+    QUNS_RUNNING_D3D_FULL_SCREEN,
 };
 
 static SYNTHETIC_ID_COUNTER: AtomicU32 = AtomicU32::new(100_000);
@@ -53,8 +53,7 @@ impl SmartEngine {
     pub fn is_in_fullscreen_or_presentation(&self) -> bool {
         #[cfg(windows)]
         unsafe {
-            let mut state: QUERY_USER_NOTIFICATION_STATE = QUERY_USER_NOTIFICATION_STATE(0);
-            if SHQueryUserNotificationState(&mut state).is_ok() {
+            if let Ok(state) = SHQueryUserNotificationState() {
                 matches!(
                     state,
                     QUNS_BUSY | QUNS_RUNNING_D3D_FULL_SCREEN | QUNS_PRESENTATION_MODE
