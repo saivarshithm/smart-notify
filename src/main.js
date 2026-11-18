@@ -44,6 +44,7 @@ const closeDrawerBtn = document.getElementById('close-drawer-btn')              
 const clearHistoryBtn = document.getElementById('clear-history-btn')                     ;
 const sendTestBtn = document.getElementById('send-test-btn')                     ;
 const focusToggleBtn = document.getElementById('focus-toggle-btn')                     ;
+const checkUpdatesBtn = document.getElementById('check-updates-btn')                            ;
 
 // App State
                        
@@ -154,6 +155,17 @@ function createCardElement(item                  , isStackChild          = false
     () => dismissNotification(item.id, item.app_id),
     (hovering) => handleCardHover(item.id, hovering)
   );
+
+  // If notification has a clickable link (e.g. software update)
+  if (item.action_url) {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', (e) => {
+      if ((e.target               ).closest('.card-close-btn') || (e.target               ).closest('.stack-clear-btn')) {
+        return;
+      }
+      tauriInvoke('open_url', { url: item.action_url });
+    });
+  }
 
   return card;
 }
@@ -505,6 +517,92 @@ function escapeHtml(str        )         {
     .replace(/'/g, '&#039;');
 }
 
+// Check for Software Updates via GitHub Releases
+const CURRENT_APP_VERSION = 'v1.0.3';
+const GITHUB_REPO_PATH = 'saivarshithm/smart-notify';
+
+async function checkForUpdates(manualTrigger          = true) {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO_PATH}/releases/latest`, {
+      headers: { Accept: 'application/vnd.github.v3+json' },
+    });
+    if (!res.ok) {
+      if (manualTrigger) {
+        handleIncomingNotification({
+          id: Date.now(),
+          app_id: 'com.smartnotify.updater',
+          app_name: 'Smart Notify Updater',
+          app_icon_base64: null,
+          title: 'Update Check',
+          body: 'Unable to check for updates right now. Please check your internet connection.',
+          timestamp: Date.now(),
+          time_formatted: 'now',
+          is_urgent: false,
+          is_coalesced: false,
+          coalesce_count: 1,
+          coalesced_messages: [],
+        });
+      }
+      return;
+    }
+
+    const data = await res.json();
+    const latestVersion = data.tag_name || data.name;
+    const releaseUrl = data.html_url || `https://github.com/${GITHUB_REPO_PATH}/releases/latest`;
+
+    if (latestVersion && latestVersion !== CURRENT_APP_VERSION) {
+      handleIncomingNotification({
+        id: Date.now(),
+        app_id: 'com.smartnotify.updater',
+        app_name: 'Smart Notify Updater',
+        app_icon_base64: null,
+        title: `Update Available: ${latestVersion}`,
+        body: `A new version of Smart Notify is available (current: ${CURRENT_APP_VERSION}). Click this card to download.`,
+        timestamp: Date.now(),
+        time_formatted: 'now',
+        is_urgent: true,
+        is_coalesced: false,
+        coalesce_count: 1,
+        coalesced_messages: [],
+        action_url: releaseUrl,
+      });
+    } else if (manualTrigger) {
+      handleIncomingNotification({
+        id: Date.now(),
+        app_id: 'com.smartnotify.updater',
+        app_name: 'Smart Notify Updater',
+        app_icon_base64: null,
+        title: "You're Up to Date!",
+        body: `Smart Notify ${CURRENT_APP_VERSION} is currently the newest version available.`,
+        timestamp: Date.now(),
+        time_formatted: 'now',
+        is_urgent: false,
+        is_coalesced: false,
+        coalesce_count: 1,
+        coalesced_messages: [],
+      });
+    }
+  } catch (err) {
+    console.error('Update check failed:', err);
+    if (manualTrigger) {
+      handleIncomingNotification({
+        id: Date.now(),
+        app_id: 'com.smartnotify.updater',
+        app_name: 'Smart Notify Updater',
+        app_icon_base64: null,
+        title: 'Update Check',
+        body: 'Could not connect to GitHub. Please check your internet connection.',
+        timestamp: Date.now(),
+        time_formatted: 'now',
+        is_urgent: false,
+        is_coalesced: false,
+        coalesce_count: 1,
+        coalesced_messages: [],
+      });
+    }
+  }
+}
+
 // Initialise listeners and UI wiring
 function init() {
   // Register drawer elements for cursor hover interaction
@@ -526,6 +624,12 @@ function init() {
   sendTestBtn.addEventListener('click', () => {
     tauriInvoke('send_test_notification');
   });
+
+  if (checkUpdatesBtn) {
+    checkUpdatesBtn.addEventListener('click', () => {
+      checkForUpdates(true);
+    });
+  }
 
   focusToggleBtn.addEventListener('click', async () => {
     isFocusModeActive = (await tauriInvoke('toggle_smart_focus_mode')) || false;
@@ -576,6 +680,10 @@ function init() {
 
     window.__TAURI__.event.listen('toggle-history', () => {
       toggleHistoryDrawer();
+    });
+
+    window.__TAURI__.event.listen('check-for-updates', () => {
+      checkForUpdates(true);
     });
 
     window.__TAURI__.event.listen         ('focus-mode-changed', (evt) => {

@@ -11,6 +11,7 @@ export interface NotificationItem {
   is_coalesced: boolean;
   coalesce_count: number;
   coalesced_messages: string[];
+  action_url?: string;
 }
 
 export interface ListenerStatusPayload {

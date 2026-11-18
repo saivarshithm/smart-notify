@@ -80,6 +80,17 @@ fn open_rules_file(state: tauri::State<AppState>) {
 }
 
 #[command]
+fn open_url(url: String) {
+    #[cfg(windows)]
+    {
+        use std::process::Command;
+        let _ = Command::new("cmd")
+            .args(["/c", "start", "", &url])
+            .spawn();
+    }
+}
+
+#[command]
 fn send_test_notification(
     app_handle: AppHandle,
     state: tauri::State<AppState>,
@@ -186,6 +197,7 @@ pub fn run() {
             toggle_smart_focus_mode,
             open_notification_settings,
             open_rules_file,
+            open_url,
             send_test_notification,
             recalculate_window_position,
         ])

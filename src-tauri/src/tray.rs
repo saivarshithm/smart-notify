@@ -17,6 +17,8 @@ pub fn setup_tray<R: Runtime>(
         MenuItemBuilder::with_id("toggle_focus", "Smart Focus Pause (1 hr)").build(app)?;
     let edit_rules_item =
         MenuItemBuilder::with_id("edit_rules", "Edit smart-rules.json").build(app)?;
+    let check_updates_item =
+        MenuItemBuilder::with_id("check_updates", "Check for Updates...").build(app)?;
     let open_settings_item =
         MenuItemBuilder::with_id("open_settings", "Open Windows Notification Settings").build(app)?;
     let separator = PredefinedMenuItem::separator(app)?;
@@ -28,6 +30,7 @@ pub fn setup_tray<R: Runtime>(
             &send_test_item,
             &toggle_focus_item,
             &edit_rules_item,
+            &check_updates_item,
             &open_settings_item,
             &separator,
             &quit_item,
@@ -79,6 +82,9 @@ pub fn setup_tray<R: Runtime>(
                         use std::process::Command;
                         let _ = Command::new("notepad.exe").arg(path).spawn();
                     }
+                }
+                "check_updates" => {
+                    let _ = app_handle.emit("check-for-updates", ());
                 }
                 "open_settings" => {
                     #[cfg(windows)]
