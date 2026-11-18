@@ -10,6 +10,9 @@
     "test": "node --test test-suite.js && node run-preview-test.js",
     "icons": "node generate-icons.js"
   },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0"
+  },
   "keywords": [
     "tauri",
     "windows-11",

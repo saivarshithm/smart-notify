@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { stripTypeScriptTypes } from 'node:module';
+import moduleApi from 'node:module';
 
 const ROOT_DIR = process.cwd();
 const SRC_DIR = path.join(ROOT_DIR, 'src');
@@ -12,22 +12,30 @@ if (!fs.existsSync(DIST_DIR)) {
   fs.mkdirSync(DIST_DIR, { recursive: true });
 }
 
-// 1. Process and transpile TypeScript files from src/ to dist/ and src/
+// Check if stripTypeScriptTypes is natively supported by this Node version
+const hasNativeStrip = typeof moduleApi.stripTypeScriptTypes === 'function';
+
 const tsFiles = ['types.ts', 'physics.ts', 'main.ts'];
 
 for (const file of tsFiles) {
-  const srcPath = path.join(SRC_DIR, file);
-  if (fs.existsSync(srcPath)) {
-    const rawTs = fs.readFileSync(srcPath, 'utf8');
-    const strippedJs = stripTypeScriptTypes(rawTs);
+  const srcTsPath = path.join(SRC_DIR, file);
+  const outFileName = file.replace(/\.ts$/, '.js');
+  const distPath = path.join(DIST_DIR, outFileName);
+  const srcJsPath = path.join(SRC_DIR, outFileName);
 
-    const outFileName = file.replace(/\.ts$/, '.js');
-    const distPath = path.join(DIST_DIR, outFileName);
-    const srcJsPath = path.join(SRC_DIR, outFileName);
-
+  if (hasNativeStrip && fs.existsSync(srcTsPath)) {
+    const rawTs = fs.readFileSync(srcTsPath, 'utf8');
+    const strippedJs = moduleApi.stripTypeScriptTypes(rawTs);
     fs.writeFileSync(distPath, strippedJs, 'utf8');
     fs.writeFileSync(srcJsPath, strippedJs, 'utf8');
     console.log(`[build] Transpiled ${file} -> dist/${outFileName}`);
+  } else if (fs.existsSync(srcJsPath)) {
+    // Fallback: Copy pre-generated JS file
+    fs.copyFileSync(srcJsPath, distPath);
+    console.log(`[build] Copied ${outFileName} -> dist/${outFileName}`);
+  } else if (fs.existsSync(srcTsPath)) {
+    // Basic regex-free fallback for plain JS
+    fs.copyFileSync(srcTsPath, distPath);
   }
 }
 
@@ -42,7 +50,6 @@ if (fs.existsSync(cssPath)) {
 const indexHtmlPath = path.join(ROOT_DIR, 'index.html');
 if (fs.existsSync(indexHtmlPath)) {
   let html = fs.readFileSync(indexHtmlPath, 'utf8');
-  // Update script and link paths for dist
   html = html.replace('./src/main.js', './main.js');
   html = html.replace('./src/main.ts', './main.js');
   html = html.replace('./style.css', './style.css');

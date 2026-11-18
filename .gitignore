@@ -3,9 +3,6 @@ target/
 src-tauri/target/
 src-tauri/gen/
 
-# Generated frontend dist
-dist/
-
 # Node
 node_modules/
 npm-debug.log*

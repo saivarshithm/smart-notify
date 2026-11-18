@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Notify</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="overlay-container">
+      <!-- System Notification Access Permission Alert -->
+      <div id="permission-banner" role="alert">
+        <div class="perm-text">
+          <strong>Notification Access Required:</strong> Click here to open Windows Settings and allow Notification Listener access.
+        </div>
+        <div class="perm-action">Open Settings &rarr;</div>
+      </div>
+
+      <!-- Active Floating Notifications Column -->
+      <div id="notifications-list" aria-live="polite"></div>
+
+      <!-- Slide-Out Notification Center History Drawer -->
+      <div id="history-drawer" role="dialog" aria-label="Notification Center">
+        <div class="drawer-header">
+          <div class="drawer-title-group">
+            <span class="drawer-title">Notifications</span>
+            <span id="history-badge" class="drawer-badge">0</span>
+          </div>
+          <div class="drawer-actions">
+            <button id="send-test-btn" class="icon-button" title="Send Test Notification" aria-label="Send Test">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            </button>
+            <button id="focus-toggle-btn" class="icon-button" title="Smart Focus Mode (Pause alerts for 1 hr)" aria-label="Toggle Focus">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </button>
+            <button id="clear-history-btn" class="icon-button" title="Clear History" aria-label="Clear History">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </button>
+            <button id="close-drawer-btn" class="icon-button" title="Close Drawer (Esc)" aria-label="Close Drawer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="drawer-toolbar">
+          <input
+            id="history-search"
+            class="search-input"
+            type="text"
+            placeholder="Search recent alerts or apps..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+
+        <div id="history-list" class="drawer-list"></div>
+      </div>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
