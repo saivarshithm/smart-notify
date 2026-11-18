@@ -1,0 +1,24 @@
+{
+  "name": "smart-notify",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Production-grade, ultra-lightweight Smart Notify overlay for Windows 11",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js",
+    "test": "node --test test-suite.js && node run-preview-test.js",
+    "icons": "node generate-icons.js"
+  },
+  "keywords": [
+    "tauri",
+    "windows-11",
+    "notification-listener",
+    "winrt",
+    "overlay",
+    "frosted-glass",
+    "spring-physics"
+  ],
+  "author": "Smart Notify",
+  "license": "MIT"
+}

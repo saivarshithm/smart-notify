@@ -1,0 +1,20 @@
+# Build & Cargo targets
+target/
+src-tauri/target/
+src-tauri/gen/
+
+# Generated frontend dist
+dist/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# MSIX & Certs generated locally
+sparse-package/*.cer
+sparse-package/*.msix
+
+# OS files
+.DS_Store
+Thumbs.db
+*.tmp

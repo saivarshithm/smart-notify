@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Notify — Interactive Live Preview</title>
+    <link rel="stylesheet" href="./dist/style.css" />
+    <style>
+      body {
+        background: linear-gradient(135deg, #1e1e24 0%, #2a2b36 50%, #181920 100%) !important;
+        background-attachment: fixed;
+      }
+      /* Interactive Dev Control Bar */
+      #dev-control-bar {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(28, 28, 30, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 30px;
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+      }
+      .dev-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 180ms ease;
+      }
+      .dev-btn:hover {
+        background: #6366f1;
+        border-color: #6366f1;
+        transform: translateY(-1px);
+      }
+      .dev-btn.urgent:hover {
+        background: #ef4444;
+        border-color: #ef4444;
+      }
+      .dev-label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-right: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Overlay UI container identical to production -->
+    <div id="overlay-container">
+      <div id="permission-banner" role="alert">
+        <div class="perm-text">
+          <strong>Notification Access Required:</strong> Click here to open Windows Settings and allow Notification Listener access.
+        </div>
+        <div class="perm-action">Open Settings &rarr;</div>
+      </div>
+
+      <div id="notifications-list" aria-live="polite"></div>
+
+      <div id="history-drawer" role="dialog" aria-label="Notification Center">
+        <div class="drawer-header">
+          <div class="drawer-title-group">
+            <span class="drawer-title">Notifications</span>
+            <span id="history-badge" class="drawer-badge">0</span>
+          </div>
+          <div class="drawer-actions">
+            <button id="send-test-btn" class="icon-button" title="Send Test Notification">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            </button>
+            <button id="focus-toggle-btn" class="icon-button" title="Smart Focus Mode">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </button>
+            <button id="clear-history-btn" class="icon-button" title="Clear History">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </button>
+            <button id="close-drawer-btn" class="icon-button" title="Close Drawer (Esc)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="drawer-toolbar">
+          <input
+            id="history-search"
+            class="search-input"
+            type="text"
+            placeholder="Search recent alerts or apps..."
+            autocomplete="off"
+          />
+        </div>
+
+        <div id="history-list" class="drawer-list"></div>
+      </div>
+    </div>
+
+    <!-- Live Preview Testing Toolbar -->
+    <div id="dev-control-bar">
+      <span class="dev-label">TEST PAYLOADS:</span>
+      <button class="dev-btn" id="btn-normal">💬 Normal Alert</button>
+      <button class="dev-btn urgent" id="btn-urgent">🚨 Urgent OTP</button>
+      <button class="dev-btn" id="btn-burst">⚡ 3x WhatsApp Burst</button>
+      <button class="dev-btn" id="btn-stack">📚 Stack Slack Alert</button>
+      <button class="dev-btn" id="btn-drawer">📜 History Drawer</button>
+    </div>
+
+    <!-- Mock Tauri environment for browser preview testing -->
+    <script>
+      const mockHistory = [];
+      const listeners = {};
+
+      window.__TAURI__ = {
+        core: {
+          invoke: async (cmd, args) => {
+            console.log(`[Tauri Mock Invoke] ${cmd}`, args);
+            if (cmd === 'get_notification_history') {
+              return [...mockHistory];
+            }
+            if (cmd === 'clear_notification_history') {
+              mockHistory.length = 0;
+              return true;
+            }
+            if (cmd === 'toggle_smart_focus_mode') {
+              return true;
+            }
+            if (cmd === 'send_test_notification') {
+              triggerMockNotification({
+                id: Math.floor(Math.random() * 90000) + 10000,
+                app_id: 'com.github.desktop',
+                app_name: 'GitHub Desktop',
+                app_icon_base64: null,
+                title: 'Pull Request #42 Merged',
+                body: 'Main branch updated with smart-notify v1.0 release.',
+                timestamp: Date.now(),
+                time_formatted: 'now',
+                is_urgent: false,
+                is_coalesced: false,
+                coalesce_count: 1,
+                coalesced_messages: [],
+              });
+              return null;
+            }
+            return null;
+          },
+        },
+        event: {
+          listen: async (eventName, handler) => {
+            if (!listeners[eventName]) listeners[eventName] = [];
+            listeners[eventName].push(handler);
+            return () => {
+              listeners[eventName] = listeners[eventName].filter((h) => h !== handler);
+            };
+          },
+        },
+      };
+
+      function triggerMockNotification(item) {
+        mockHistory.unshift(item);
+        if (mockHistory.length > 50) mockHistory.pop();
+        if (listeners['new-notification']) {
+          listeners['new-notification'].forEach((fn) => fn({ event: 'new-notification', payload: item }));
+        }
+      }
+
+      function triggerMockCoalesce(item) {
+        mockHistory.unshift(item);
+        if (mockHistory.length > 50) mockHistory.pop();
+        if (listeners['coalesce-notification']) {
+          listeners['coalesce-notification'].forEach((fn) => fn({ event: 'coalesce-notification', payload: item }));
+        }
+      }
+    </script>
+
+    <script type="module" src="./dist/main.js"></script>
+
+    <script>
+      // Wire up the testing buttons
+      document.getElementById('btn-normal').addEventListener('click', () => {
+        triggerMockNotification({
+          id: Date.now(),
+          app_id: 'com.spotify.music',
+          app_name: 'Spotify',
+          app_icon_base64: null,
+          title: 'Starboy (feat. Daft Punk)',
+          body: 'The Weeknd • Starboy',
+          timestamp: Date.now(),
+          time_formatted: 'now',
+          is_urgent: false,
+          is_coalesced: false,
+          coalesce_count: 1,
+          coalesced_messages: [],
+        });
+      });
+
+      document.getElementById('btn-urgent').addEventListener('click', () => {
+        triggerMockNotification({
+          id: Date.now(),
+          app_id: 'com.google.chrome',
+          app_name: 'Google Chrome',
+          app_icon_base64: null,
+          title: '2FA Verification Code: 839201',
+          body: 'URGENT: Do not share this code with anyone. Expires in 5 minutes.',
+          timestamp: Date.now(),
+          time_formatted: 'now',
+          is_urgent: true,
+          is_coalesced: false,
+          coalesce_count: 1,
+          coalesced_messages: [],
+        });
+      });
+
+      let burstCount = 0;
+      document.getElementById('btn-burst').addEventListener('click', () => {
+        burstCount += 3;
+        triggerMockCoalesce({
+          id: Date.now(),
+          app_id: 'com.whatsapp.desktop',
+          app_name: 'WhatsApp',
+          app_icon_base64: null,
+          title: `WhatsApp (${burstCount} new alerts)`,
+          body: `${burstCount} recent messages coalesced`,
+          timestamp: Date.now(),
+          time_formatted: 'now',
+          is_urgent: false,
+          is_coalesced: true,
+          coalesce_count: burstCount,
+          coalesced_messages: [
+            'Alex: Hey are you coming to the sync?',
+            'Alex: Sending the agenda now',
+            'Alex: See you in 5 mins!',
+          ],
+        });
+      });
+
+      document.getElementById('btn-stack').addEventListener('click', () => {
+        triggerMockNotification({
+          id: Date.now(),
+          app_id: 'com.tinyspeck.slack',
+          app_name: 'Slack',
+          app_icon_base64: null,
+          title: 'Dev Team (#general)',
+          body: `Deployment update ${Math.floor(Math.random() * 100)}: Build pipeline finished smoothly.`,
+          timestamp: Date.now(),
+          time_formatted: 'now',
+          is_urgent: false,
+          is_coalesced: false,
+          coalesce_count: 1,
+          coalesced_messages: [],
+        });
+      });
+
+      document.getElementById('btn-drawer').addEventListener('click', () => {
+        if (listeners['toggle-history']) {
+          listeners['toggle-history'].forEach((fn) => fn({ event: 'toggle-history', payload: null }));
+        }
+      });
+    </script>
+  </body>
+</html>

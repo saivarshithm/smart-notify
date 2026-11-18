@@ -1,0 +1,23 @@
+{
+  "muted_apps": [
+    "Microsoft.Windows.ShellExperienceHost",
+    "Windows.SystemToast.Suggested"
+  ],
+  "urgent_keywords": [
+    "otp",
+    "verification",
+    "verify",
+    "2fa",
+    "urgent",
+    "critical",
+    "build failed",
+    "alert",
+    "security code",
+    "password reset"
+  ],
+  "burst_window_ms": 4000,
+  "burst_threshold": 3,
+  "normal_duration_ms": 5500,
+  "urgent_duration_ms": 9000,
+  "suppress_fullscreen": true
+}

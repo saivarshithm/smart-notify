@@ -1,0 +1,88 @@
+name: Release Smart Notify
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Build Frontend
+        run: |
+          npm run build
+          npm test
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2.0.0" --locked
+
+      - name: Build Tauri Executable and NSIS Installer
+        run: cargo tauri build
+
+      - name: Prepare Portable Package
+        shell: pwsh
+        run: |
+          $ReleaseDir = "src-tauri/target/release"
+          $BundleDir = "$ReleaseDir/bundle/nsis"
+          
+          New-Item -ItemType Directory -Force -Path "dist-portable/sparse-package/Assets"
+          
+          # Copy main binary
+          Copy-Item "$ReleaseDir/smart-notify.exe" -Destination "dist-portable/"
+          
+          # Copy one-click installer scripts
+          Copy-Item "install.bat" -Destination "dist-portable/"
+          Copy-Item "uninstall.bat" -Destination "dist-portable/"
+          Copy-Item "smart-rules.default.json" -Destination "dist-portable/smart-rules.json"
+          
+          # Copy sparse package identity files
+          Copy-Item "sparse-package/AppxManifest.xml" -Destination "dist-portable/sparse-package/"
+          Copy-Item "sparse-package/register-identity.ps1" -Destination "dist-portable/sparse-package/"
+          Copy-Item "sparse-package/unregister-identity.ps1" -Destination "dist-portable/sparse-package/"
+          Copy-Item "sparse-package/Assets/*" -Destination "dist-portable/sparse-package/Assets/"
+          
+          # Compress into portable zip
+          Compress-Archive -Path "dist-portable/*" -DestinationPath "Smart-Notify-Portable-x64.zip" -Force
+
+      - name: Locate Artifacts
+        id: artifacts
+        shell: pwsh
+        run: |
+          $nsisInstaller = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*.exe" | Select-Object -First 1
+          if ($nsisInstaller) {
+            Copy-Item $nsisInstaller.FullName -Destination "Smart-Notify-Setup-x64.exe"
+            Write-Host "Found NSIS installer: Smart-Notify-Setup-x64.exe"
+          }
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Smart-Notify-Setup-x64.exe
+            Smart-Notify-Portable-x64.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
