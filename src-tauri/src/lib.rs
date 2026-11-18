@@ -9,7 +9,7 @@ use rules::RulesManager;
 use smart_engine::{ProcessResult, SmartEngine};
 use std::sync::Arc;
 use tauri::{
-    command, AppHandle, Emitter, LogicalPosition, LogicalSize, Manager, PhysicalPosition,
+    command, AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition,
     Position, Size, WebviewWindow,
 };
 use winrt_listener::{start_winrt_listener, WinRtListenerHandle};
