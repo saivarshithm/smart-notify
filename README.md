@@ -1,6 +1,13 @@
 # 🔔 Smart Notify (`smart-notify`)
 
-> A production-grade, ultra-lightweight, and intelligent notification overlay for Windows 11 built with **Tauri v2 (Rust + TypeScript/HTML/CSS)**. Features event-driven WinRT interception, smart deck grouping, burst coalescing, genuine spring physics, and real desktop frosted-glass blur.
+<p align="center">
+  <img src="./smart-notify-logo.png" alt="Smart Notify Logo" width="160" style="border-radius: 36px; box-shadow: 0 12px 30px rgba(0,0,0,0.3);" />
+</p>
+
+<p align="center">
+  <strong>Production-grade, ultra-lightweight Windows 11 Smart Notification Overlay</strong><br>
+  Built with Tauri v2 (Rust + TypeScript/HTML/CSS), WinRT interception, and frosted-glass blur.
+</p>
 
 ---
 
