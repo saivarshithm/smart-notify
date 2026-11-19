@@ -1,6 +1,6 @@
 import type { NotificationItem, SmartRules } from './types.js';
 
-const CURRENT_VERSION = 'v1.0.3';
+const CURRENT_VERSION = 'v1.0.6';
 const GITHUB_REPO = 'saivarshithm/smart-notify';
 
 declare global {
@@ -56,6 +56,11 @@ let allHistoryItems: NotificationItem[] = [];
 const navItems = document.querySelectorAll<HTMLButtonElement>('.nav-item');
 const tabPanes = document.querySelectorAll<HTMLElement>('.tab-pane');
 const minimizeBtn = document.getElementById('minimize-dashboard-btn') as HTMLButtonElement;
+const historyNavCount = document.getElementById('history-nav-count') as HTMLElement;
+
+// Header Buttons
+const headerTestBtn = document.getElementById('header-test-btn') as HTMLButtonElement;
+const headerUpdateBtn = document.getElementById('header-update-btn') as HTMLButtonElement;
 
 // Rules Elements
 const mutedAppsContainer = document.getElementById('muted-apps-container') as HTMLElement;
@@ -81,6 +86,12 @@ const testBtnUrgent = document.getElementById('test-btn-urgent') as HTMLButtonEl
 const testBtnBurst = document.getElementById('test-btn-burst') as HTMLButtonElement;
 const testBtnStack = document.getElementById('test-btn-stack') as HTMLButtonElement;
 
+// Custom Test Lab Elements
+const customAppName = document.getElementById('custom-app-name') as HTMLInputElement;
+const customTitle = document.getElementById('custom-title') as HTMLInputElement;
+const customBody = document.getElementById('custom-body') as HTMLInputElement;
+const customSendBtn = document.getElementById('custom-send-btn') as HTMLButtonElement;
+
 // History Elements
 const dashboardHistorySearch = document.getElementById('dashboard-history-search') as HTMLInputElement;
 const dashboardHistoryList = document.getElementById('dashboard-history-list') as HTMLElement;
@@ -93,6 +104,8 @@ const linkGithubRepo = document.getElementById('link-github-repo') as HTMLAnchor
 const linkGithubReleases = document.getElementById('link-github-releases') as HTMLAnchorElement;
 const linkPrivacySettings = document.getElementById('link-privacy-settings') as HTMLAnchorElement;
 const overviewOpenSettingsBtn = document.getElementById('overview-open-settings-btn') as HTMLButtonElement;
+const toggleFocusBtn = document.getElementById('toggle-focus-btn') as HTMLButtonElement;
+const openOverlayDrawerBtn = document.getElementById('open-overlay-drawer-btn') as HTMLButtonElement;
 
 // Tab Switching
 function setupTabs() {
@@ -271,11 +284,40 @@ function setupTestLab() {
       },
     });
   });
+
+  customSendBtn.addEventListener('click', () => {
+    const app = customAppName.value.trim() || 'Custom App';
+    const title = customTitle.value.trim() || 'Test Title';
+    const body = customBody.value.trim() || 'Test Message';
+
+    tauriInvoke('send_test_notification', {
+      payload: {
+        app_id: `custom.${app.toLowerCase().replace(/\s+/g, '.')}`,
+        app_name: app,
+        title,
+        body,
+        is_urgent: null,
+      },
+    });
+  });
+
+  headerTestBtn.addEventListener('click', () => {
+    testBtnNormal.click();
+  });
+
+  headerUpdateBtn.addEventListener('click', () => {
+    const updatesTab = document.querySelector<HTMLButtonElement>('[data-tab="tab-updates"]');
+    updatesTab?.click();
+    checkUpdates();
+  });
 }
 
 // History Manager
 async function loadHistory(query: string = '') {
   allHistoryItems = (await tauriInvoke<NotificationItem[]>('get_notification_history')) || [];
+  if (historyNavCount) {
+    historyNavCount.textContent = allHistoryItems.length.toString();
+  }
   renderHistoryTable(query);
 }
 
@@ -376,6 +418,25 @@ function setupUpdatesAndLinks() {
     tauriInvoke('open_notification_settings');
   });
 
+  let focusActive = false;
+  toggleFocusBtn.addEventListener('click', async () => {
+    focusActive = (await tauriInvoke('toggle_smart_focus_mode')) || false;
+    const subtext = document.getElementById('focus-toggle-subtext');
+    const badge = document.getElementById('overview-focus-badge');
+    const text = document.getElementById('overview-focus-text');
+
+    if (subtext) subtext.textContent = focusActive ? 'Paused for 1 hour' : 'Pause non-urgent alerts';
+    if (badge) {
+      badge.textContent = focusActive ? 'ACTIVE' : 'INACTIVE';
+      badge.className = focusActive ? 'badge badge-success' : 'badge badge-neutral';
+    }
+    if (text) text.textContent = focusActive ? 'Paused (1 hr)' : 'Normal Delivery';
+  });
+
+  openOverlayDrawerBtn.addEventListener('click', () => {
+    tauriInvoke('toggle-history');
+  });
+
   minimizeBtn.addEventListener('click', () => {
     if (window.__TAURI__?.window?.getCurrentWindow) {
       window.__TAURI__.window.getCurrentWindow().hide();
@@ -410,7 +471,8 @@ async function init() {
   setupTestLab();
   setupHistory();
   setupUpdatesAndLinks();
-  console.log('Smart Notify Dashboard initialized.');
+  await loadHistory();
+  console.log('Smart Notify Pro Dashboard initialized.');
 }
 
 window.addEventListener('DOMContentLoaded', init);

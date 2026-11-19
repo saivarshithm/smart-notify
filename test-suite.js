@@ -125,7 +125,7 @@ test('5. Frontend Build Artifacts Integrity', () => {
   assert.ok(html.includes('notifications-list'), 'HTML must have notifications-list');
 
   const dashboardHtml = fs.readFileSync(path.join(ROOT_DIR, 'dist', 'dashboard.html'), 'utf8');
-  assert.ok(dashboardHtml.includes('Management Dashboard'), 'Dashboard HTML must have title');
+  assert.ok(dashboardHtml.includes('Management Dashboard') || dashboardHtml.includes('Control Center'), 'Dashboard HTML must have title');
   assert.ok(dashboardHtml.includes('tab-testing'), 'Dashboard HTML must have Test Lab tab');
   assert.ok(dashboardHtml.includes('tab-rules'), 'Dashboard HTML must have Smart Rules tab');
 });

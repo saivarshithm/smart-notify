@@ -210,6 +210,17 @@ pub fn run() {
             // Start WinRT Listener on dedicated MTA thread
             start_winrt_listener(app.handle().clone(), smart_engine.clone());
 
+            // Intercept dashboard window close to hide to tray instead of quitting
+            if let Some(dashboard) = app.get_webview_window("dashboard") {
+                let dash_clone = dashboard.clone();
+                dashboard.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        api.prevent_close();
+                        let _ = dash_clone.hide();
+                    }
+                });
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
